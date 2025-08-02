@@ -2,7 +2,9 @@ package main
 
 import (
 	"os"
-	"time"
+	"os/signal"
+
+	"syscall"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -20,7 +22,11 @@ func main() {
 	setupApi()
 	setupWeb()
 
-	time.Sleep(60 * time.Minute)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Info().Msg("Shutting down all services...")
 }
 
 func setupLog() {
