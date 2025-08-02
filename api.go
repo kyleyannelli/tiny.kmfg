@@ -71,6 +71,7 @@ func redirectURL(c *fiber.Ctx) error {
 		})
 	}
 
+	visitUrl(&tinyUrl, c)
 	logContext(API_LOGGER.Info(), c).Str("shortCode", shortCode).Msg("")
 
 	return c.Redirect(tinyUrl.TrueUrl)

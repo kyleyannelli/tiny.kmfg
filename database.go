@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -25,6 +26,16 @@ func setupDb() {
 	db.AutoMigrate(&UserAudit{})
 
 	DB_LOGGER.Info().Msg("Database migrations completed")
+}
+
+func visitUrl(tinyUrl *TinyUrl, c *fiber.Ctx) {
+	tinyVisit := &TinyVisit{
+		ShortCode: tinyUrl.ShortCode,
+		IPAddress: c.IP(),
+		Referer:   string(c.Request().Header.Referer()),
+		UserAgent: string(c.Request().Header.UserAgent()),
+	}
+	db.Create(&tinyVisit)
 }
 
 func createOrOpenDb() *gorm.DB {
