@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 const (
@@ -37,8 +38,17 @@ func createOrOpenDb() *gorm.DB {
 		DB_LOGGER.Fatal().Err(err).Str("path", dbPath).Msg("Failed to resolve absolute path")
 	}
 
+	var gormLogger logger.Interface
+	if os.Getenv("KMFG_TINY_DB_LOG") == "true" {
+		gormLogger = logger.Default
+	} else {
+		gormLogger = logger.Discard
+	}
+
 	DB_LOGGER.Info().Str("database", absPath).Msg("Opening database")
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+		Logger: gormLogger,
+	})
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create or open the sqlite3 database at %s.", absPath))
 	}

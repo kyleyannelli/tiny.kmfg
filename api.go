@@ -50,8 +50,6 @@ func redirectURL(c *fiber.Ctx) error {
 		})
 	}
 
-	logContext(API_LOGGER.Info(), c).Str("shortCode", shortCode).Msg("")
-
 	var tinyUrl TinyUrl
 	res := db.Where("short_code = ?", shortCode).First(&tinyUrl)
 
@@ -72,6 +70,8 @@ func redirectURL(c *fiber.Ctx) error {
 			"error": "Internal error",
 		})
 	}
+
+	logContext(API_LOGGER.Info(), c).Str("shortCode", shortCode).Msg("")
 
 	return c.Redirect(tinyUrl.TrueUrl)
 }
