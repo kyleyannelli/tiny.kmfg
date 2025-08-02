@@ -97,3 +97,16 @@ tags
 # binary
 tiny
 *.db
+
+*.o
+*.a
+*.so
+*.test
+*.prof
+*.out
+
+vendor/
+tmp/
+
+# build output
+air
