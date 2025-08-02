@@ -4,8 +4,6 @@ Administrative url aliasing service for managing long and large url collections.
 
 # Setup
 
-Run the binary or build it yourself with `go build`
-
 #### Environment Variables
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -15,4 +13,7 @@ Run the binary or build it yourself with `go build`
 | `KMFG_TINY_DB_LOG` | `false` | set to true for database logging |
 
 ### Run the Service
+
+Run the binary, build it yourself with `go build`, or use `go run .`
+
 ![Screenshot of tiny.kmfg startup logs](/screenshots/log_example.png)
