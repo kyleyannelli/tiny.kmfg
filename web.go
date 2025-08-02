@@ -21,9 +21,20 @@ func setupWeb() {
 		WEB_LOGGER.Fatal().Str("port", serverPortStr).Msg("Cannot convert given port to an int!")
 	}
 
-	web := fiber.New(fiber.Config{
-		DisableStartupMessage: true,
-	})
+	var web *fiber.App
+	if len(TRUSTED_PROXIES) == 0 {
+		web = fiber.New(fiber.Config{
+			DisableStartupMessage: true,
+		})
+	} else {
+		WEB_LOGGER.Info().Any("trustedProxies", TRUSTED_PROXIES).Msg("Using trusted proxies.")
+		web = fiber.New(fiber.Config{
+			DisableStartupMessage:   true,
+			EnableTrustedProxyCheck: true,
+			TrustedProxies:          TRUSTED_PROXIES,
+			ProxyHeader:             fiber.HeaderXForwardedFor,
+		})
+	}
 
 	go listenAloneWeb(web, serverPort)
 

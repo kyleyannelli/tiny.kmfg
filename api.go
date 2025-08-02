@@ -22,9 +22,21 @@ func setupApi() {
 	if err != nil {
 		API_LOGGER.Fatal().Str("port", serverPortStr).Msg("Cannot convert given port to an int!")
 	}
-	api := fiber.New(fiber.Config{
-		DisableStartupMessage: true,
-	})
+
+	var api *fiber.App
+	if len(TRUSTED_PROXIES) == 0 {
+		api = fiber.New(fiber.Config{
+			DisableStartupMessage: true,
+		})
+	} else {
+		API_LOGGER.Info().Any("trustedProxies", TRUSTED_PROXIES).Msg("Using trusted proxies.")
+		api = fiber.New(fiber.Config{
+			DisableStartupMessage:   true,
+			EnableTrustedProxyCheck: true,
+			TrustedProxies:          TRUSTED_PROXIES,
+			ProxyHeader:             fiber.HeaderXForwardedFor,
+		})
+	}
 
 	api.Get("/:shortCode", redirectURL)
 	go listenAloneApi(api, serverPort)

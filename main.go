@@ -11,14 +11,16 @@ import (
 )
 
 var (
-	DB_LOGGER  zerolog.Logger
-	API_LOGGER zerolog.Logger
-	WEB_LOGGER zerolog.Logger
+	DB_LOGGER       zerolog.Logger
+	API_LOGGER      zerolog.Logger
+	WEB_LOGGER      zerolog.Logger
+	TRUSTED_PROXIES []string
 )
 
 func main() {
 	setupLog()
 	setupDb()
+	setupTrustedProxies()
 	setupApi()
 	setupWeb()
 
@@ -34,4 +36,8 @@ func setupLog() {
 	DB_LOGGER = log.With().Str("service", "database").Logger()
 	API_LOGGER = log.With().Str("service", "api").Logger()
 	WEB_LOGGER = log.With().Str("service", "web").Logger()
+}
+
+func setupTrustedProxies() {
+	TRUSTED_PROXIES = ParseTrustedProxies()
 }
