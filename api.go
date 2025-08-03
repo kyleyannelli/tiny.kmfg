@@ -24,6 +24,9 @@ func setupApi() {
 }
 
 func setupApiRoutes(api *fiber.App) *fiber.App {
+	api.Get("/", func(c *fiber.Ctx) error {
+		return c.SendStatus(http.StatusTeapot)
+	})
 	api.Get("/robots.txt", robots)
 	api.Get("/:shortCode", redirectURL)
 	return api
