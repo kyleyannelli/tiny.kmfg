@@ -8,6 +8,8 @@ Made to run hassle free or with fine grained control. The API is read only and t
 
 # Setup
 
+#### Note: The docker-compose.yml is ready to go with the below default values. Simply run `docker compose up -d`
+
 #### Environment Variables
 | Variable | Default | Description |
 |----------|---------|-------------|
