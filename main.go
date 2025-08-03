@@ -3,18 +3,22 @@ package main
 import (
 	"os"
 	"os/signal"
+	"sync"
 
 	"syscall"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
 var (
-	DB_LOGGER       zerolog.Logger
-	API_LOGGER      zerolog.Logger
-	WEB_LOGGER      zerolog.Logger
-	TRUSTED_PROXIES []string
+	DB_LOGGER         zerolog.Logger
+	API_LOGGER        zerolog.Logger
+	WEB_LOGGER        zerolog.Logger
+	TRUSTED_PROXIES   []string
+	ADMIN_NEEDS_SETUP bool = false
+	adminSetupMutex   sync.RWMutex
 )
 
 func main() {
@@ -23,6 +27,7 @@ func main() {
 	log.Info().Int("pid", os.Getpid()).Msg("tiny.kmfg is starting...")
 
 	setupDb()
+	checkForAdmin()
 	setupTrustedProxies()
 	setupTLS()
 	setupApi()
@@ -54,4 +59,18 @@ func setupTLS() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to ensure TLS certificates")
 	}
+}
+
+func checkForAdmin() {
+	var dbErr error
+	var adminCount int64
+	dbErr = db.Model(&User{}).Where("is_admin = ?", true).Count(&adminCount).Error
+
+	if dbErr != nil && dbErr != gorm.ErrRecordNotFound {
+		WEB_LOGGER.Fatal().Err(dbErr).Msg("Failed to check if any admin users exist.")
+	}
+
+	adminSetupMutex.Lock()
+	ADMIN_NEEDS_SETUP = dbErr == nil && adminCount > 0
+	adminSetupMutex.Unlock()
 }

@@ -11,7 +11,7 @@ import (
 const KMFG_TINY_API_PORT = 30108
 
 func setupApi() {
-	generateRobotsTxt(nil)
+	generateRobotsTxt()
 
 	config := &ServerConfig{
 		DefaultPort: KMFG_TINY_API_PORT,

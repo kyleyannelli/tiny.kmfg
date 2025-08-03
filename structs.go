@@ -23,12 +23,12 @@ type TinyUrl struct {
 }
 
 // generate robots.txt after save
-func (tu *TinyUrl) AfterSave(tx *gorm.DB) error {
+func (tu *TinyUrl) AfterSaveCommit(tx *gorm.DB) error {
 	API_LOGGER.Info().Msg("Updating robots.txt after save.")
-	return generateRobotsTxt(tu)
+	return generateRobotsTxt()
 }
 
-func generateRobotsTxt(newTu *TinyUrl) error {
+func generateRobotsTxt() error {
 	var tinyUrls []TinyUrl
 	res := db.Where("allow_robots = ?", true).Find(&tinyUrls)
 	if res.Error != nil {
@@ -38,11 +38,6 @@ func generateRobotsTxt(newTu *TinyUrl) error {
 	var strBuilder strings.Builder
 	// disallow by default
 	strBuilder.WriteString("User-Agent: *\nDisallow: /\n\n")
-
-	// consider the new record first
-	if newTu != nil && newTu.AllowRobots {
-		strBuilder.WriteString(fmt.Sprintf("Allow: /%s\n", newTu.ShortCode))
-	}
 
 	for _, tinyUrl := range tinyUrls {
 		strBuilder.WriteString(fmt.Sprintf("Allow: /%s\n", tinyUrl.ShortCode))
@@ -127,6 +122,14 @@ func (u *User) BeforeUpdate(tx *gorm.DB) error {
 		u.Password = string(hashedPassword)
 	}
 	return nil
+}
+
+func (u *User) AfterSaveCommit(tx *gorm.DB) {
+	checkForAdmin()
+}
+
+func (u *User) AfterDeleteCommit(tx *gorm.DB) {
+	checkForAdmin()
 }
 
 func (u *User) CheckPassword(password string) bool {
