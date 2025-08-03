@@ -1,17 +1,84 @@
 package main
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
+const ROBOTS_FILE = "./robots.txt"
+
 type TinyUrl struct {
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	ShortCode string `gorm:"size:64;primaryKey"`
-	TrueUrl   string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	ShortCode   string `gorm:"size:64;primaryKey"`
+	TrueUrl     string
+	AllowRobots bool `gorm:"default:false"`
+}
+
+// generate robots.txt after save
+func (tu *TinyUrl) AfterSave(tx *gorm.DB) error {
+	API_LOGGER.Info().Msg("Updating robots.txt after save.")
+	return generateRobotsTxt(tu)
+}
+
+func generateRobotsTxt(newTu *TinyUrl) error {
+	var tinyUrls []TinyUrl
+	res := db.Where("allow_robots = ?", true).Find(&tinyUrls)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	var strBuilder strings.Builder
+	// disallow by default
+	strBuilder.WriteString("User-Agent: *\nDisallow: /\n\n")
+
+	// consider the new record first
+	if newTu != nil && newTu.AllowRobots {
+		strBuilder.WriteString(fmt.Sprintf("Allow: /%s\n", newTu.ShortCode))
+	}
+
+	for _, tinyUrl := range tinyUrls {
+		strBuilder.WriteString(fmt.Sprintf("Allow: /%s\n", tinyUrl.ShortCode))
+	}
+
+	newContent := strBuilder.String()
+
+	newHash := sha256.Sum256([]byte(newContent))
+
+	if existingContent, err := os.ReadFile(ROBOTS_FILE); err == nil {
+		existingHash := sha256.Sum256(existingContent)
+
+		if bytes.Equal(newHash[:], existingHash[:]) {
+			API_LOGGER.Info().Msg("robots.txt unchanged.")
+			return nil
+		}
+
+		sizeDiff := len(newContent) - len(existingContent)
+		API_LOGGER.Info().
+			Int("old_size", len(existingContent)).
+			Int("new_size", len(newContent)).
+			Int("size_diff", sizeDiff).
+			Msg("robots.txt content changed, updating file.")
+	} else {
+		API_LOGGER.Info().
+			Int("new_size", len(newContent)).
+			Msg("robots.txt doesn't exist, creating new file.")
+	}
+
+	if err := os.WriteFile(ROBOTS_FILE, []byte(newContent), 0644); err != nil {
+		API_LOGGER.Error().Err(err).Msg("Failed to write robots.txt")
+		return err
+	}
+
+	API_LOGGER.Info().Msg("robots.txt updated successfully.")
+	return nil
 }
 
 type TinyVisit struct {
@@ -50,23 +117,16 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 
 func (u *User) BeforeUpdate(tx *gorm.DB) error {
 	if tx.Statement.Changed("Password") && u.Password != "" {
-		if !isAlreadyHashed(u.Password) {
-			hashedPassword, err := bcrypt.GenerateFromPassword(
-				[]byte(u.Password),
-				bcrypt.DefaultCost,
-			)
-			if err != nil {
-				return err
-			}
-			u.Password = string(hashedPassword)
+		hashedPassword, err := bcrypt.GenerateFromPassword(
+			[]byte(u.Password),
+			bcrypt.DefaultCost,
+		)
+		if err != nil {
+			return err
 		}
+		u.Password = string(hashedPassword)
 	}
 	return nil
-}
-
-func isAlreadyHashed(password string) bool {
-	return len(password) == 60 && password[:4] == "$2a$" ||
-		password[:4] == "$2b$" || password[:4] == "$2y$"
 }
 
 func (u *User) CheckPassword(password string) bool {

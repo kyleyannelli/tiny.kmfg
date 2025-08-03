@@ -13,6 +13,8 @@ import (
 const KMFG_TINY_API_PORT = 30108
 
 func setupApi() {
+	generateRobotsTxt(nil)
+
 	serverPort := KMFG_TINY_API_PORT
 	serverPortStr := os.Getenv("KMFG_TINY_API_PORT")
 	var err error
@@ -38,6 +40,7 @@ func setupApi() {
 		})
 	}
 
+	api.Get("/robots.txt", robots)
 	api.Get("/:shortCode", redirectURL)
 	go listenAloneApi(api, serverPort)
 
@@ -49,6 +52,14 @@ func listenAloneApi(api *fiber.App, serverPort int) {
 	if err != nil {
 		API_LOGGER.Fatal().Int("port", serverPort).Err(err).Msg("Could not listen on specified port.")
 	}
+}
+
+func robots(c *fiber.Ctx) error {
+	_, err := os.Stat(ROBOTS_FILE)
+	if err != nil {
+		return c.SendString(fmt.Sprintf("User-Agent: *\nDisallow: /\n"))
+	}
+	return c.SendFile(ROBOTS_FILE)
 }
 
 func redirectURL(c *fiber.Ctx) error {

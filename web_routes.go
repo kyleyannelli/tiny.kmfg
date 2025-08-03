@@ -27,15 +27,17 @@ func index(c *fiber.Ctx, sigGen *StaticSignature) error {
 
 	if userPayload != nil {
 		return dashboard(c, sigGen, userPayload)
+	} else if isSetup {
+		return sigGen.RenderWithDuration(c, "login", fiber.Map{}, "layouts/main")
 	}
+	return sigGen.RenderWithDuration(c, "register", fiber.Map{}, "layouts/main")
+}
 
-	return sigGen.RenderWithDuration(c, "index", fiber.Map{
-		"InitSetup": !isSetup,
-	}, "layouts/main")
+func register(c *fiber.Ctx, sigGen *StaticSignature) {
 }
 
 func dashboard(c *fiber.Ctx, sigGen *StaticSignature, userPayload *auth.UserPayload) error {
-	return sigGen.RenderWithDuration(c, "index", fiber.Map{
+	return sigGen.RenderWithDuration(c, "dashboard", fiber.Map{
 		"IsSetup":     isSetup,
 		"UserPayload": userPayload,
 	}, "layouts/main")

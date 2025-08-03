@@ -23,9 +23,11 @@ var (
 	X_CHA_CHA, X_CHA_CHA_ERR = chacha20poly1305.NewX(PASETO_ENC_KEY)
 )
 
-func ValidateXChaCha() {
+func validateXChaCha() {
 	if X_CHA_CHA_ERR != nil {
 		WEB_LOGGER.Fatal().Err(X_CHA_CHA_ERR).Msg("Cannot initialize xchacha20poly1305.")
+	} else {
+		WEB_LOGGER.Info().Str("pasetoVersion", PASETO_VERSION_ENV).Msg("PASETO XChaCha20Poly1305 AEAD is setup.")
 	}
 }
 

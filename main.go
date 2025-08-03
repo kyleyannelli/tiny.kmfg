@@ -19,10 +19,16 @@ var (
 
 func main() {
 	setupLog()
+
+	log.Info().Int("pid", os.Getpid()).Msg("tiny.kmfg is starting...")
+
 	setupDb()
 	setupTrustedProxies()
 	setupApi()
+	validateXChaCha()
 	setupWeb()
+
+	log.Info().Int("pid", os.Getpid()).Msg("All tiny.kmfg services are ready.")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
