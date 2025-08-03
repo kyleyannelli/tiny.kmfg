@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,6 +12,7 @@ import (
 )
 
 const KMFG_TINY_WEB_PORT = 30109
+const PASETO_COOKIE_NAME = "tiny.kmfg.ui.auth"
 
 func setupWeb() {
 	serverPort := KMFG_TINY_WEB_PORT
@@ -45,13 +47,31 @@ func setupWeb() {
 
 	web.Use(func(c *fiber.Ctx) error {
 		c.Locals("startTime", time.Now())
+
+		if !strings.HasPrefix(c.Path(), "/static/") {
+			logContext(WEB_LOGGER.Info(), c).
+				Str("requestMethod", c.Method()).
+				Msg("")
+		}
+
+		paseto := c.Cookies(PASETO_COOKIE_NAME, "")
+
+		if paseto != "" {
+			userPayload, err := FromPaseto(paseto)
+			if err != nil {
+				WEB_LOGGER.Error().Err(err).Msg("Failed to load user payload from paseto.")
+			} else {
+				c.Locals("authenticatedUserPayload", userPayload)
+			}
+		}
+
 		return c.Next()
 	})
 
 	signatureGen := setupStaticRouting(web)
 
 	web.Get("/", func(c *fiber.Ctx) error {
-		return signatureGen.RenderWithDuration(c, "index", fiber.Map{}, "layouts/main")
+		return index(c, signatureGen)
 	})
 
 	go listenAloneWeb(web, serverPort)

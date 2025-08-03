@@ -13,13 +13,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const MAX_REQ_TIME = 500 * time.Millisecond
-const ROTATE_GRACE_TIME = 30 * time.Second
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const (
-	letterIdxBits = 6
-	letterIdxMask = 1<<letterIdxBits - 1
-	letterIdxMax  = 63 / letterIdxBits
+	MAX_REQ_TIME      = 500 * time.Millisecond
+	ROTATE_GRACE_TIME = 30 * time.Second
+	letterBytes       = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letterIdxBits     = 6
+	letterIdxMask     = 1<<letterIdxBits - 1
+	letterIdxMax      = 63 / letterIdxBits
 )
 
 type StaticSignature struct {
@@ -88,26 +88,26 @@ func (signature *StaticSignature) RenderWithDuration(c *fiber.Ctx, fileName stri
 }
 
 func (signature *StaticSignature) GenerateSignature() string {
-	hmacObj := hmac.New(sha256.New, []byte(signature.GenerateSecret()))
-	hmacObj.Write([]byte(signature.GenerateSecret()))
+	hmacObj := hmac.New(sha256.New, GenerateSecret())
+	hmacObj.Write(GenerateSecret())
 	return hex.EncodeToString(hmacObj.Sum(nil))
 }
 
-func (signature *StaticSignature) GenerateSecret() string {
-	n := 28
+func GenerateSecret() []byte {
+	n := 32
 	b := make([]byte, n)
 
 	src := rand.Reader
 	randNum, err := rand.Int(src, big.NewInt(63))
 	if err != nil {
-		signature.Logger.Fatal().Msg("Unable to generate initial random int.")
+		WEB_LOGGER.Fatal().Msg("Unable to generate initial random int.")
 	}
 
 	for i, cache, remain := n-1, randNum.Int64(), letterIdxMax; i >= 0; {
 		if remain == 0 {
 			newRandNum, err := rand.Int(src, big.NewInt(63))
 			if err != nil {
-				signature.Logger.Fatal().Msg("Unable to generate a new random number.")
+				WEB_LOGGER.Fatal().Msg("Unable to generate a new random number.")
 			}
 			cache, remain = newRandNum.Int64(), letterIdxMax
 		}
@@ -119,5 +119,5 @@ func (signature *StaticSignature) GenerateSecret() string {
 		remain--
 	}
 
-	return string(b[:])
+	return b
 }

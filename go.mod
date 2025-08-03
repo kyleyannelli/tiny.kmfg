@@ -5,6 +5,7 @@ go 1.24.4
 require (
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/rs/zerolog v1.34.0
+	google.golang.org/protobuf v1.36.6
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.1
 )

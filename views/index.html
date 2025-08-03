@@ -1,5 +1,26 @@
 <div>
+    {{ if .InitSetup }}
     <h1>
         Welcome!
     </h1>
+    <h2>
+        Please create the initial admin account.
+    </h2>
+    {{ else }}
+    <h1>
+        Welcome Back.
+    </h1>
+    <h2>
+        Login
+    </h2>
+    </br>
+    <section>
+        <form>
+            <label for="username-input">Username</label>
+            <input type="text" id="username-input" placeholder="Enter username">
+            <label for="password-input">Password</label>
+            <input type="password" id="password-input" placeholder="Enter password">
+        </form>
+    </section>
+    {{ end }}
 </div>

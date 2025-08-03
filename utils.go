@@ -14,6 +14,7 @@ func logContext(event *zerolog.Event, c *fiber.Ctx) *zerolog.Event {
 	return event.
 		Str("uri", c.Path()).
 		Str("ipAddress", c.IP()).
+		Any("origin", c.Context().RemoteIP()).
 		Str("referer", string(c.Request().Header.Referer())).
 		Str("userAgent", string(c.Request().Header.UserAgent()))
 }
