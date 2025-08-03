@@ -30,7 +30,7 @@ func index(c *fiber.Ctx, sigGen *StaticSignature) error {
 	} else if isSetup {
 		return sigGen.RenderWithDuration(c, "login", fiber.Map{}, "layouts/main")
 	}
-	return sigGen.RenderWithDuration(c, "register", fiber.Map{}, "layouts/main")
+	return sigGen.RenderWithDuration(c, "first_signup", fiber.Map{}, "layouts/main")
 }
 
 func register(c *fiber.Ctx, sigGen *StaticSignature) {

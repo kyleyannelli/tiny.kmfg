@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -15,49 +13,26 @@ const KMFG_TINY_API_PORT = 30108
 func setupApi() {
 	generateRobotsTxt(nil)
 
-	serverPort := KMFG_TINY_API_PORT
-	serverPortStr := os.Getenv("KMFG_TINY_API_PORT")
-	var err error
-	if serverPortStr != "" {
-		serverPort, err = strconv.Atoi(serverPortStr)
-	}
-	if err != nil {
-		API_LOGGER.Fatal().Str("port", serverPortStr).Msg("Cannot convert given port to an int!")
+	config := &ServerConfig{
+		DefaultPort: KMFG_TINY_API_PORT,
+		PortEnvVar:  "KMFG_TINY_API_PORT",
+		Logger:      &API_LOGGER,
+		EnableTLS:   os.Getenv("KMFG_TINY_API_TLS") != "false",
 	}
 
-	var api *fiber.App
-	if len(TRUSTED_PROXIES) == 0 {
-		api = fiber.New(fiber.Config{
-			DisableStartupMessage: true,
-		})
-	} else {
-		API_LOGGER.Info().Any("trustedProxies", TRUSTED_PROXIES).Msg("Using trusted proxies.")
-		api = fiber.New(fiber.Config{
-			DisableStartupMessage:   true,
-			EnableTrustedProxyCheck: true,
-			TrustedProxies:          TRUSTED_PROXIES,
-			ProxyHeader:             fiber.HeaderXForwardedFor,
-		})
-	}
-
-	api.Get("/robots.txt", robots)
-	api.Get("/:shortCode", redirectURL)
-	go listenAloneApi(api, serverPort)
-
-	API_LOGGER.Info().Int("port", serverPort).Msg("Started API server")
+	config.startServer(setupApiRoutes)
 }
 
-func listenAloneApi(api *fiber.App, serverPort int) {
-	err := api.Listen(fmt.Sprintf(":%d", serverPort))
-	if err != nil {
-		API_LOGGER.Fatal().Int("port", serverPort).Err(err).Msg("Could not listen on specified port.")
-	}
+func setupApiRoutes(api *fiber.App) *fiber.App {
+	api.Get("/robots.txt", robots)
+	api.Get("/:shortCode", redirectURL)
+	return api
 }
 
 func robots(c *fiber.Ctx) error {
 	_, err := os.Stat(ROBOTS_FILE)
 	if err != nil {
-		return c.SendString(fmt.Sprintf("User-Agent: *\nDisallow: /\n"))
+		return c.SendString("User-Agent: *\nDisallow: /\n")
 	}
 	return c.SendFile(ROBOTS_FILE)
 }

@@ -24,6 +24,7 @@ func main() {
 
 	setupDb()
 	setupTrustedProxies()
+	setupTLS()
 	setupApi()
 	validateXChaCha()
 	setupWeb()
@@ -46,4 +47,11 @@ func setupLog() {
 
 func setupTrustedProxies() {
 	TRUSTED_PROXIES = ParseTrustedProxies()
+}
+
+func setupTLS() {
+	err := ensureTLSCertificates()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to ensure TLS certificates")
+	}
 }

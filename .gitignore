@@ -98,6 +98,12 @@ tags
 tiny
 *.db
 
+# certs
+*.pem
+
+# generated robots.txt
+robots.txt
+
 *.o
 *.a
 *.so
