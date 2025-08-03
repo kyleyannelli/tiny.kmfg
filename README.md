@@ -2,6 +2,10 @@
 
 Administrative url aliasing service for managing long and large url collections.
 
+HTTPS by default & PASETO for web auth.
+
+Made to run hassle free or with fine grained control. The API is read only and the Web UI for management are served separately for peace of mind when exposing the API to the internet.
+
 # Setup
 
 #### Environment Variables
@@ -22,3 +26,12 @@ Administrative url aliasing service for managing long and large url collections.
 Run the binary, build it yourself with `go build`, or use `go run .`
 
 ![Screenshot of tiny.kmfg startup logs](/screenshots/log_example.png)
+
+# Thanks
+#### This project is built on the below 
+- [Golang](https://go.dev/)
+- [Go Fiber](https://gofiber.io/)
+- [zerolog](https://github.com/rs/zerolog)
+- [SQLite](https://www.sqlite.org/)
+- [HTMX](https://htmx.org/)
+- [Classless.css](https://github.com/DigitallyTailored/Classless.css)
